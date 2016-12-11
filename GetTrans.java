@@ -11,43 +11,43 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class GetTrans {
-	public static void getFromYoudao(String word) throws IOException
+	public static String getFromYoudao(String word) throws IOException
 	{
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		
-		//¸ù¾İ²éÕÒµ¥´Ê¹¹Ôì²éÕÒµØÖ·
+		//æ ¹æ®æŸ¥æ‰¾å•è¯æ„é€ æŸ¥æ‰¾åœ°å€
         HttpGet getWordMean = new HttpGet("http://dict.youdao.com/w/" + word + "/#keyfrom=dict2.top");
-        CloseableHttpResponse response = httpClient.execute(getWordMean);//È¡µÃ·µ»ØµÄÍøÒ³Ô´Âë
+        CloseableHttpResponse response = httpClient.execute(getWordMean);//å–å¾—è¿”å›çš„ç½‘é¡µæºç 
 
         String result = EntityUtils.toString(response.getEntity());
         response.close();
-        //×¢Òâ(?s)£¬ÒâË¼ÊÇÈÃ'.'Æ¥Åä»»ĞĞ·û£¬Ä¬ÈÏÇé¿öÏÂ²»Æ¥Åä
+        //æ³¨æ„(?s)ï¼Œæ„æ€æ˜¯è®©'.'åŒ¹é…æ¢è¡Œç¬¦ï¼Œé»˜è®¤æƒ…å†µä¸‹ä¸åŒ¹é…
         Pattern searchMeanPattern = Pattern.compile("(?s)<div class=\"trans-container\">.*?<ul>.*?</div>");
-        Matcher m1 = searchMeanPattern.matcher(result); //m1ÊÇ»ñÈ¡°üº¬·­ÒëµÄÕû¸ö<div>µÄ
+        Matcher m1 = searchMeanPattern.matcher(result); //m1æ˜¯è·å–åŒ…å«ç¿»è¯‘çš„æ•´ä¸ª<div>çš„
 
         if (m1.find()) 
         {
-            String means = m1.group();//ËùÓĞ½âÊÍ£¬°üº¬ÍøÒ³±êÇ©
-            Pattern getChinese = Pattern.compile("(?m)<li>(.*?)</li>"); //(?m)´ú±í°´ĞĞÆ¥Åä
+            String means = m1.group();//æ‰€æœ‰è§£é‡Šï¼ŒåŒ…å«ç½‘é¡µæ ‡ç­¾
+            Pattern getChinese = Pattern.compile("(?m)<li>(.*?)</li>"); //(?m)ä»£è¡¨æŒ‰è¡ŒåŒ¹é…
             Matcher m2 = getChinese.matcher(means);
-
-            System.out.println("ÓĞµÀÊÍÒå:");
+            
+            String answer = new String();
             while (m2.find()) {
-                //ÔÚJavaÖĞ(.*?)ÊÇµÚ1×é£¬ËùÒÔÓÃgroup(1)
-                System.out.println("\t" + m2.group(1));
+                //åœ¨Javaä¸­(.*?)æ˜¯ç¬¬1ç»„ï¼Œæ‰€ä»¥ç”¨group(1)
+                answer = answer + m2.group(1) + "\n";
             }
+            return answer;
         } 
         else 
         {
-            System.out.println("Î´²éÕÒµ½ÊÍÒå.");
-            return;
+            return new String("æœªæŸ¥æ‰¾åˆ°é‡Šä¹‰.");
         }
 	}
-	public static void getFromJinshan(String word) throws IOException
+	public static String getFromJinshan(String word) throws IOException
 	{
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		
-		//È¡µÃ°Ù¶È·­ÒëµÄ²éÕÒµØÖ·
+		//å–å¾—ç™¾åº¦ç¿»è¯‘çš„æŸ¥æ‰¾åœ°å€
 		HttpGet getWordMean = new HttpGet("http://www.iciba.com/" + word);
 		CloseableHttpResponse response = httpClient.execute(getWordMean);
 
@@ -55,18 +55,18 @@ public class GetTrans {
         response.close();
         
         Pattern searchMeanPattern = Pattern.compile("(?s)<ul class=\"base-list switch_part\" class=\"\">.*?</ul>");
-        Matcher m1 = searchMeanPattern.matcher(result); //m1ÊÇ»ñÈ¡°üº¬·­ÒëµÄÕû¸ö<div>µÄ
+        Matcher m1 = searchMeanPattern.matcher(result); //m1æ˜¯è·å–åŒ…å«ç¿»è¯‘çš„æ•´ä¸ª<div>çš„
         
         if(m1.find())
         {
-        	System.out.println("½ğÉ½ÊÍÒå:");
-        	String types = m1.group();//ËùÓĞ½âÊÍ£¬°üº¬ÍøÒ³±êÇ©
-            Pattern getType = Pattern.compile("(?s)<span class=\"prop\">(.*?)</span>(.*?)</p>"); //(?m)´ú±í°´ĞĞÆ¥Åä
+        	String types = m1.group();//æ‰€æœ‰è§£é‡Šï¼ŒåŒ…å«ç½‘é¡µæ ‡ç­¾
+            Pattern getType = Pattern.compile("(?s)<span class=\"prop\">(.*?)</span>(.*?)</p>"); //(?m)ä»£è¡¨æŒ‰è¡ŒåŒ¹é…
             Matcher m2 = getType.matcher(types);
+            String answer = new String();
             
             while (m2.find()) 
             {
-            	System.out.print("\t"+m2.group(1));
+            	answer = answer + m2.group(1);
             	
             	String means = m2.group();
             	Pattern getChinese = Pattern.compile("<span>(.*?)</span>");
@@ -74,60 +74,59 @@ public class GetTrans {
             	
             	while(m3.find())
             	{
-            		System.out.print(m3.group(1));
+            		answer = answer + m3.group(1);
             	}
-            	System.out.println();
+            	answer = answer + "\n";
             }
+            return answer;
         }
         else
         {
-            System.out.println("Î´²éÕÒµ½ÊÍÒå.");
-            return;
+        	return new String("æœªæŸ¥æ‰¾åˆ°é‡Šä¹‰.");
         }	
 	}
-	public static void getFromBing(String word) throws IOException
+	public static String getFromBing(String word) throws IOException
 	{
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		
-		//¸ù¾İ²éÕÒµ¥´Ê¹¹Ôì²éÕÒµØÖ·
-        HttpGet getWordMean = new HttpGet("http://cn.bing.com/dict/search?q=" + word + "&go=ËÑË÷&qs=bs&form=Z9LH5");
-        CloseableHttpResponse response = httpClient.execute(getWordMean);//È¡µÃ·µ»ØµÄÍøÒ³Ô´Âë
+		//æ ¹æ®æŸ¥æ‰¾å•è¯æ„é€ æŸ¥æ‰¾åœ°å€
+        HttpGet getWordMean = new HttpGet("http://cn.bing.com/dict/search?q=" + word + "&go=æœç´¢&qs=bs&form=Z9LH5");
+        CloseableHttpResponse response = httpClient.execute(getWordMean);//å–å¾—è¿”å›çš„ç½‘é¡µæºç 
 
         String result = EntityUtils.toString(response.getEntity());
         response.close();
-        //×¢Òâ(?s)£¬ÒâË¼ÊÇÈÃ'.'Æ¥Åä»»ĞĞ·û£¬Ä¬ÈÏÇé¿öÏÂ²»Æ¥Åä
+        //æ³¨æ„(?s)ï¼Œæ„æ€æ˜¯è®©'.'åŒ¹é…æ¢è¡Œç¬¦ï¼Œé»˜è®¤æƒ…å†µä¸‹ä¸åŒ¹é…
         Pattern searchMeanPattern = Pattern.compile("(?s)<meta name=\"description\"(.*?)/>");
-        Matcher m1 = searchMeanPattern.matcher(result); //m1ÊÇ»ñÈ¡°üº¬·­ÒëµÄÕû¸ö<div>µÄ
+        Matcher m1 = searchMeanPattern.matcher(result); //m1æ˜¯è·å–åŒ…å«ç¿»è¯‘çš„æ•´ä¸ª<div>çš„
 
         if (m1.find()) 
         {
-            String means = m1.group();//ËùÓĞ½âÊÍ£¬°üº¬ÍøÒ³±êÇ©
-            Pattern getChinese = Pattern.compile("(?s)]£¬(.*?)\""); //(?m)´ú±í°´ĞĞÆ¥Åä
+            String means = m1.group();//æ‰€æœ‰è§£é‡Šï¼ŒåŒ…å«ç½‘é¡µæ ‡ç­¾
+            Pattern getChinese = Pattern.compile("(?s)]ï¼Œ(.*?)\""); //(?m)ä»£è¡¨æŒ‰è¡ŒåŒ¹é…
             Matcher m2 = getChinese.matcher(means);
             
-            System.out.println("±ØÓ¦ÊÍÒå:");
             if(m2.find())
             {
             	means = m2.group(1) + "##";
-            	getChinese = Pattern.compile("(?s)]£¬(.*?)##");
+            	getChinese = Pattern.compile("(?s)]ï¼Œ(.*?)##");
             	Matcher m3 = getChinese.matcher(means);
             	if(m3.find())
-            		System.out.println("\t"+m3.group(1));
+            		return new String(m3.group(1));
             	else
-            		System.out.println("\t"+m2.group(1));
+            		return new String(m2.group(1));
             }
+            return new String("æœªæŸ¥æ‰¾åˆ°é‡Šä¹‰.");
         } 
         else 
         {
-            System.out.println("Î´²éÕÒµ½ÊÍÒå.");
-            return;
+        	return new String("æœªæŸ¥æ‰¾åˆ°é‡Šä¹‰.");
         }
 	}
 	public static void get(String word) throws IOException
 	{
-		getFromYoudao(word);
-		getFromJinshan(word);
+		System.out.println(getFromYoudao(word));
+		System.out.println(getFromJinshan(word));
 		word = word.replaceAll("%20","+");
-		getFromBing(word);
+		System.out.println(getFromBing(word));
 	}
 }
