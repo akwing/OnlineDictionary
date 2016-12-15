@@ -1,0 +1,84 @@
+package src;
+import src.DicData;
+import src.UserInfo;
+import OnlineDic.Message;
+
+import java.io.*;
+import java.net.*;
+import java.sql.SQLException;
+
+public class DicSer {
+
+	public static void main(String[] args) throws ClassNotFoundException, SQLException {
+		// TODO 自动生成的方法存根
+		new DicSer();
+
+	}
+	public DicSer() throws ClassNotFoundException, SQLException{
+		try {
+			ServerSocket serverSocket = new ServerSocket(8006);
+			System.out.println("server started");
+			//Socket socket = serverSocket.accept();
+			//DataInputStream inputFromClient = new DataInputStream(socket.getInputStream());
+			//DataOutputStream outputToClient = new DataOutputStream(socket.getOutputStream());
+			//while(true){
+			//	System.out.println("1");
+			//	String i = inputFromClient.readUTF();
+			//	System.out.println("2");
+			//	System.out.println(i);
+			//	outputToClient.writeUTF(i+" jinrongdoubi ");
+			//}
+			
+			while(true){
+				Socket socket = serverSocket.accept();
+				
+				HandleAClient task = new HandleAClient(socket);
+				new Thread(task).start();
+			}
+			
+		} catch (IOException e) {
+			 //TODO 自动生成的 catch 块
+			e.printStackTrace();
+		}
+		
+	}
+
+}
+class HandleAClient implements Runnable{
+	public static final int SIGNIN = 0,LOGIN = 1, LOGOUT = 2;
+	Socket socket;
+	public HandleAClient(Socket socket){
+		this.socket = socket;
+		
+	}
+	public void run() {
+		// TODO 自动生成的方法存根
+		try {
+			ObjectInputStream inputFromClient = new ObjectInputStream(socket.getInputStream());
+			ObjectOutputStream outputToClient = new ObjectOutputStream(socket.getOutputStream());
+			while(true){
+				System.out.println("1");
+				Message msg = (Message) inputFromClient.readObject();
+				System.out.println("2");
+				if(msg.type == SIGNIN){
+					DicData.SignIn(msg.username,msg.password);
+				}
+				else if(msg.type == LOGIN){
+					DicData.LogIn(msg.username, msg.password);
+				}
+				outputToClient.writeObject(msg);
+			}
+		} catch (IOException e) {
+			// TODO 自动生成的 catch 块
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO 自动生成的 catch 块
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO 自动生成的 catch 块
+			e.printStackTrace();
+		}
+	}
+}
+
+
