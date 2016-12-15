@@ -1,0 +1,51 @@
+package src;
+
+public class UserInfo {
+	String UserId;
+	String UserKey;
+	int NumOfYoudao;
+	int NumOfJinshan;
+	int NumOfBing;
+	int total;
+	public void SetUserId(String str){
+		UserId = str;
+	}
+	public void SetUserKey(String str){
+		UserKey = str;
+	}
+	public void SetYoudao(int i){
+		NumOfYoudao = i;
+	}
+	public void SetJinshan(int i){
+		NumOfJinshan = i;
+	}
+	public void SetBing(int i){
+		NumOfBing = i;
+	}
+	public String GetUserId(){
+		return UserId;
+	}
+	public String GetUserKey(){
+		return UserKey;
+	}
+	public int GetYoudao(){
+		return NumOfYoudao;
+	}
+	public int GetJinshan(){
+		return NumOfJinshan;
+	}
+	public int GetBing(){
+		return NumOfBing;
+	}
+	public int Gettotal(){
+		total = NumOfBing + NumOfYoudao + NumOfJinshan;
+		return total;
+	}
+	public UserInfo(){
+		NumOfYoudao = 0;
+		NumOfJinshan = 0;
+		NumOfBing = 0;
+		total = 0;
+	}
+}
+
