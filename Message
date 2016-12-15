@@ -1,0 +1,43 @@
+package OnlineDic;
+
+public class Message implements java.io.Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	public static final int SIGNIN = 0,LOGIN = 1, LOGOUT = 2;
+	public int type;
+	public boolean b;
+	public String username;
+	public String password;
+	public int numYoudao, numJinshan, numBing;
+
+	//登陆或注册时客户端发给服务器
+	public Message(int type, String username, String password)
+	{
+		this.type = type;
+		this.username = username;
+		this.password = password;
+	}
+	
+	//注册时的信息
+	public Message(boolean success)
+	{
+		this.b = success;
+	}
+	
+	//登陆时的返回信息
+	public Message(boolean success,int numYoudao, int numJinshan, int numBing)
+	{
+		this.b = success;
+		this.numYoudao = numYoudao;
+		this.numJinshan = numJinshan;
+		this.numBing = numBing;
+	}
+	
+	//注销时发送的信息
+	public Message()
+	{
+		this.type = LOGOUT;
+	}
+}
