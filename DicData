@@ -1,0 +1,60 @@
+import java.sql.*;
+import java.util.*;
+import java.io.*;
+
+import src.UserInfo;
+
+
+public class DicData {
+	static String classname = "com.mysql.jdbc.Driver";
+	static String url = "jdbc:mysql://localhost/test";
+	static String username = "root";
+	static String userpass= "daiiwei110";
+	static String tableName = "UserInfo";
+	
+	
+	public static void Insert(UserInfo uif) throws ClassNotFoundException, SQLException{
+		String insertstr = "insert into UserInfo values (?,?,?,?,?,?)";
+		Class.forName(classname);
+		Connection con = DriverManager.getConnection(url,username,userpass);
+		PreparedStatement pstmt = con.prepareStatement(insertstr);
+		
+		pstmt.setString(1, uif.GetUserId());
+		pstmt.setString(2, uif.GetUserKey());
+		pstmt.setInt(3, uif.GetYoudao());
+		pstmt.setInt(4, uif.GetJinshan());
+		pstmt.setInt(5, uif.GetBing());
+		pstmt.setInt(6, uif.Gettotal());
+		
+		int ins = pstmt.executeUpdate();
+		pstmt.close();
+		con.close();
+	}
+	
+	public static void Show() throws ClassNotFoundException, SQLException{
+		Class.forName(classname);
+		Connection con = DriverManager.getConnection(url,username,userpass);
+		PreparedStatement pstmt = con.prepareStatement("select * from " + tableName);
+		ResultSet rs = pstmt.executeQuery();
+		while(rs.next()){
+			System.out.println(rs.getString(1) + "\t" + rs.getString(2));
+		}
+	}
+	
+	
+	public static void main(String[]args) throws ClassNotFoundException, SQLException{
+		
+		
+		UserInfo uif = new UserInfo();
+		Scanner input = new Scanner(System.in);
+		
+		System.out.print("Enter UserId:");
+		uif.SetUserId(input.next());
+		System.out.print("Enter UserKey:");
+		uif.SetUserKey(input.next());
+		
+		input.close();
+		Insert(uif);
+		Show();
+		}
+	}
