@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -34,14 +35,14 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private static final int height = 5, width = 40;
+	private static final int height = 5, width = 30;
 	
 	private boolean hasLogin;
 	
 	private JTextField jtfWord = new JTextField(40);
 	  
     private JTextArea jtaYoudao = new JTextArea(height, width), jtaJinshan = new JTextArea(height, width), jtaBing = new JTextArea(height, width);
-    private JButton jbt = new JButton("查询");
+    private JButton jbt = new JButton("查询"), jbt1, jbt2, jbt3;
     
     private JCheckBox jcbYoudao = new JCheckBox("有道",true), 
     		jcbJinshan =  new JCheckBox("金山",true), 
@@ -50,8 +51,9 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
     private JMenuBar jmb = new JMenuBar();
     private JMenu logMenu = new JMenu("账户"), onlineMenu = new JMenu("线上"), helpMenu = new JMenu("帮助");
     private JMenuItem jmi1 = new JMenuItem("用户注册"), jmi2 = new JMenuItem("用户登陆"), jmi3 = new JMenuItem("用户注销");
+    private JLabel jlab1, jlab2, jlab3;
     
-    JPanel p1, p2, p3, jpYoudao, jpJinshan, jpBing, p7;
+    private JPanel p1, p2, p3, jpYoudao, jpJinshan, jpBing, p7;
     
     public OnlineDictionaryClient()
     {
@@ -88,12 +90,24 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 		//p3.setBorder(new TitledBorder("候选区"));
 		p2.add(p3, BorderLayout.NORTH);
 		
-		jpYoudao = new JPanel(new FlowLayout(FlowLayout.CENTER,4,4));
-		jpJinshan = new JPanel(new FlowLayout(FlowLayout.CENTER,4,4));
-		jpBing = new JPanel(new FlowLayout(FlowLayout.CENTER,4,4));
-		jpYoudao.add(jtaYoudao);
-		jpJinshan.add(jtaJinshan);
-		jpBing.add(jtaBing);
+		jlab1 = new JLabel(new ImageIcon("C:\\Users\\user\\workspace\\Youdao.jpg"));
+		jlab2 = new JLabel(new ImageIcon("C:\\Users\\user\\workspace\\Jinshan.jpg"));
+		jlab3 = new JLabel(new ImageIcon("C:\\Users\\user\\workspace\\Bing.jpg"));
+		
+		jpYoudao = new JPanel(new FlowLayout(FlowLayout.LEFT,15,4));
+		jpJinshan = new JPanel(new FlowLayout(FlowLayout.LEFT,15,4));
+		jpBing = new JPanel(new FlowLayout(FlowLayout.LEFT,15,4));
+		
+		jbt1 = new JButton("\n 赞 \n");
+		jbt2 = new JButton("\n 赞 \n");
+		jbt3 = new JButton("\n 赞 \n");
+		
+		jpYoudao.add(jlab1);jpYoudao.add(jtaYoudao);jpYoudao.add(jbt1);
+		
+		jpJinshan.add(jlab2);jpJinshan.add(jtaJinshan);jpJinshan.add(jbt2);
+		
+		jpBing.add(jlab3);jpBing.add(jtaBing);jpBing.add(jbt3);
+		
 		jpYoudao.setBorder(new TitledBorder("有道"));
 		jpJinshan.setBorder(new TitledBorder("金山"));
 		jpBing.setBorder(new TitledBorder("必应"));
@@ -167,24 +181,8 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
     	jmi1.addActionListener(new ActionListener(){
     		public void actionPerformed(ActionEvent e)
     		{
-    			String username, password;
-    			//username = JOptionPane.showInputDialog("请输入用户名");
-    			//password = JOptionPane.showInputDialog("请输入密码");
-    			
-    			//Message m = new Message(Message.SIGNIN, username, password);
-    			
-    			ObjectOutputStream toServer;
-    			ObjectInputStream fromServer;
     			Runnable task = new SigninTask();
     			new Thread(task).start();
-    			/*try {
-					Socket socket = new Socket("172.26.91.180",8006);
-					toServer =  new ObjectOutputStream(socket.getOutputStream());
-					fromServer = new ObjectInputStream(socket.getInputStream());
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}*/
     		}
     	});
     	
@@ -192,24 +190,23 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
     	jmi2.addActionListener(new ActionListener(){
     		public void actionPerformed(ActionEvent e)
     		{
-    			String username, password;
-    			//username = JOptionPane.showInputDialog("请输入用户名");
-    			//password = JOptionPane.showInputDialog("请输入密码");
-    			
-    			//Message m = new Message(Message.SIGNIN, username, password);
-    			
-    			ObjectOutputStream toServer;
-    			ObjectInputStream fromServer;
     			Runnable task = new LoginTask();
     			new Thread(task).start();
-    			/*try {
-					Socket socket = new Socket("172.26.91.180",8006);
-					toServer =  new ObjectOutputStream(socket.getOutputStream());
-					fromServer = new ObjectInputStream(socket.getInputStream());
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}*/
+    		}
+    	});
+    	//用户登陆按钮
+    	jmi2.addActionListener(new ActionListener(){
+    		public void actionPerformed(ActionEvent e)
+    		{
+    			Runnable task = new LoginTask();
+    			new Thread(task).start();
+    		}
+    	});
+    	//用户注销按钮
+    	jmi3.addActionListener(new ActionListener(){
+    		public void actionPerformed(ActionEvent e)
+    		{
+    			
     		}
     	});
     	this.setVisible(true);
@@ -263,7 +260,7 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 			this.setResizable(false);
 			jlab1 = new JLabel("账号");
 			jlab2 = new JLabel("密码");
-			jbt1 = new JButton("确定");
+			jbt1 = new JButton("注册");
 			jbt2 = new JButton("取消");
 			jtf = new JTextField();
 			jpw = new JPasswordField();
@@ -286,12 +283,48 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 	    	Dimension dm = tk.getScreenSize(); 
 	    	this.setLocation((int)(dm.getWidth()-300)/2,(int)(dm.getHeight()-200)/2);
 	    	
+	    	//注册
 	    	jbt1.addActionListener(new ActionListener(){
-	    		public void actionPerformed(ActionEvent e)
+	    		@SuppressWarnings("deprecation")
+				public void actionPerformed(ActionEvent e)
 	    		{
+	    			String username, password;
+	    			username = jtf.getText();
+	    			password = jpw.getText();
+	    			
+	    			//System.out.println(username+"\n"+password);
+	    			
+	    			Message m = new Message(Message.SIGNIN, username, password);
+	    			
+	    			ObjectOutputStream toServer;
+	    			ObjectInputStream fromServer;
+	    			try {
+						Socket socket = new Socket("172.26.121.75",8006);
+						toServer =  new ObjectOutputStream(socket.getOutputStream());
+						toServer.flush();
+						fromServer = new ObjectInputStream(socket.getInputStream());
+						
+						toServer.writeObject(m);
+						m = (Message) fromServer.readObject();
+						if(m.b)
+						{	
+							//注册成功
+						}
+						else
+						{
+							//注册失败
+						}
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (ClassNotFoundException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 	    			dispose();
 	    		}
 	    	});
+	    	//取消
 	    	jbt2.addActionListener(new ActionListener(){
 	    		public void actionPerformed(ActionEvent e)
 	    		{
@@ -325,7 +358,7 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 			this.setResizable(false);
 			jlab1 = new JLabel("账号");
 			jlab2 = new JLabel("密码");
-			jbt1 = new JButton("确定");
+			jbt1 = new JButton("登录");
 			jbt2 = new JButton("取消");
 			jtf = new JTextField();
 			jpw = new JPasswordField();
@@ -348,12 +381,47 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 	    	Dimension dm = tk.getScreenSize(); 
 	    	this.setLocation((int)(dm.getWidth()-300)/2,(int)(dm.getHeight()-200)/2);
 	    	
+	    	//登录
 	    	jbt1.addActionListener(new ActionListener(){
 	    		public void actionPerformed(ActionEvent e)
 	    		{
+	    			String username, password;
+	    			username = jtf.getText();
+	    			password = jpw.getText();
+	    			
+	    			//System.out.println(username+"\n"+password);
+	    			
+	    			Message m = new Message(Message.LOGIN, username, password);
+	    			
+	    			ObjectOutputStream toServer;
+	    			ObjectInputStream fromServer;
+	    			try {
+						Socket socket = new Socket("172.26.121.75",8006);
+						toServer =  new ObjectOutputStream(socket.getOutputStream());
+						toServer.flush();
+						fromServer = new ObjectInputStream(socket.getInputStream());
+						
+						toServer.writeObject(m);
+						m = (Message) fromServer.readObject();
+						if(m.b)
+						{	
+							//登陆成功
+						}
+						else
+						{
+							//登陆失败
+						}
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (ClassNotFoundException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 	    			dispose();
 	    		}
 	    	});
+	    	//取消
 	    	jbt2.addActionListener(new ActionListener(){
 	    		public void actionPerformed(ActionEvent e)
 	    		{
