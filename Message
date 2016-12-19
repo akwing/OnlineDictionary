@@ -1,17 +1,21 @@
 package OnlineDic;
 
+
 public class Message implements java.io.Serializable{
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public static final int SIGNIN = 0,LOGIN = 1, LOGOUT = 2;
+	public static final int SIGNIN = 0,LOGIN = 1, LOGOUT = 2, SHARE = 3, USERLIST = 4, ZAN = 5;
 	public int type;
 	public boolean b;
 	public String username;
 	public String password;
 	public int numYoudao, numJinshan, numBing;
-
+	public String ShrWord;
+	public String ShrMeaning;
+	public String userlist;
+	
 	//登陆或注册时客户端发给服务器
 	public Message(int type, String username, String password)
 	{
