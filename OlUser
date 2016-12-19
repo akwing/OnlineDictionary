@@ -1,0 +1,79 @@
+package src;
+
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+
+import OnlineDic.Message;
+
+public class OlUser {
+	static private ArrayList<UserList> userlist = new ArrayList<UserList>();
+	
+	static public Message ToMessage(){
+		Message msg = new Message(Message.USERLIST,null,null);
+		for(int i = 0; i < userlist.size(); i++){
+			if(i == 0)
+				msg.userlist = userlist.get(i).UserId;
+			else
+				msg.userlist = msg.userlist + "\n" + userlist.get(i).UserId;
+		}
+		msg.b = true;
+		return msg;
+	} 
+	static public void add(String UserId, ObjectOutputStream outputToClient){
+		userlist.add(new UserList(UserId,outputToClient));
+		
+	}
+	static public void remove(String UserId){
+		int n = 0;
+		while(n<userlist.size()){
+			if(userlist.get(n).UserId.equals(UserId))
+				break;
+			n++;
+		}
+		if(n == userlist.size())
+			return;
+		userlist.remove(n);
+		return;
+	}
+	static public ObjectOutputStream GetOutputStream(String UserId){
+		int n = 0;
+		while(n<userlist.size()){
+			if(userlist.get(n).UserId.equals(UserId))
+				break;
+			n++;
+		}
+		if(n == userlist.size())
+			return null;
+		return userlist.get(n).outputToClient;
+	}
+	static public void BroadcastUser(){
+		if(userlist.size()==0){
+			System.out.println("无人在线");
+			return;
+		}
+		try {
+			Message msg = OlUser.ToMessage();
+			System.out.println("在线用户更新:\n" + msg.userlist);
+			for(int i = 0; i<userlist.size(); i++){
+				//outputToClient = new ObjectOutputStream(userlist.get(i).UserSocket.getOutputStream());
+				userlist.get(i).outputToClient.writeObject(msg);
+			}
+		} catch (IOException e) {
+			// TODO 自动生成的 catch 块
+			e.printStackTrace();
+		}
+	}
+	
+
+}
+
+class UserList{
+
+	public String UserId;
+	public ObjectOutputStream outputToClient;
+	public UserList(String UserId, ObjectOutputStream outputToClient){
+		this.UserId = UserId;
+		this.outputToClient = outputToClient;
+	}
+}
