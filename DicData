@@ -1,8 +1,7 @@
+package src;
 import java.sql.*;
 import java.util.*;
 import java.io.*;
-
-import src.UserInfo;
 
 
 public class DicData {
@@ -37,12 +36,42 @@ public class DicData {
 		PreparedStatement pstmt = con.prepareStatement("select * from " + tableName);
 		ResultSet rs = pstmt.executeQuery();
 		while(rs.next()){
-			System.out.println(rs.getString(1) + "\t" + rs.getString(2));
+			System.out.println(rs.getString(1) + "\t" + rs.getString(2) + "\t" + rs.getInt(3));
 		}
 	}
 	
+	public static boolean SignIn(String UserId,String UserKey) throws ClassNotFoundException, SQLException{
+		Class.forName(classname);
+		Connection con = DriverManager.getConnection(url,username,userpass);
+		PreparedStatement pstmt = con.prepareStatement("select * from " + tableName + " where UserId like (?)");
+		pstmt.setString(1, UserId);
+		ResultSet rs = pstmt.executeQuery();
+		if(rs.next())
+			return false;//存在
+		UserInfo uif = new UserInfo();
+		uif.SetUserId(UserId);
+		uif.SetUserKey(UserKey);
+		Insert(uif);
+		return true;
+	}
+	public static boolean LogIn(String UserId,String UserKey) throws ClassNotFoundException, SQLException{
+		Class.forName(classname);
+		Connection con = DriverManager.getConnection(url,username,userpass);
+		PreparedStatement pstmt = con.prepareStatement("select * from " + tableName + " where UserId like (?)");
+		pstmt.setString(1, UserId);
+		ResultSet rs = pstmt.executeQuery();
+		if(rs.next())
+		{
+			if(UserId.equals(rs.getString(1))&&UserKey.equals(rs.getString(2)))
+				return true;
+			return false;
+		}
+		
+		return false;
+	}
 	
-	public static void main(String[]args) throws ClassNotFoundException, SQLException{
+	
+	/*public static void main(String[]args) throws ClassNotFoundException, SQLException{
 		
 		
 		UserInfo uif = new UserInfo();
@@ -56,5 +85,5 @@ public class DicData {
 		input.close();
 		Insert(uif);
 		Show();
-		}
+		}*/
 	}
