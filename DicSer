@@ -1,0 +1,119 @@
+package src;
+import src.DicData;
+import src.OlUser;
+import OnlineDic.Message;
+import src.UserInfo;
+
+import java.io.*;
+import java.net.*;
+import java.sql.SQLException;
+
+public class DicSer {
+
+	public static void main(String[] args) throws ClassNotFoundException, SQLException {
+		// TODO 自动生成的方法存根
+		new DicSer();
+
+	}
+	public DicSer() throws ClassNotFoundException, SQLException{
+		try {
+			@SuppressWarnings("resource")
+			ServerSocket serverSocket = new ServerSocket(8007);
+			System.out.println("server started");
+			
+			while(true){
+				Socket socket = serverSocket.accept();
+				
+				HandleAClient task = new HandleAClient(socket);
+				new Thread(task).start();
+			}
+			
+		} catch (IOException e) {
+			 //TODO 自动生成的 catch 块
+			e.printStackTrace();
+		}
+		
+	}
+
+}
+class HandleAClient implements Runnable{
+	Socket socket;
+	public HandleAClient(Socket socket){
+		this.socket = socket;
+		
+	}
+	public void run() {
+		// TODO 自动生成的方法存根
+		boolean b = false;
+		String str = null;
+		try {
+			ObjectInputStream inputFromClient = new ObjectInputStream(socket.getInputStream());
+			ObjectOutputStream outputToClient = new ObjectOutputStream(socket.getOutputStream());
+			while(true){
+				Message msg = (Message) inputFromClient.readObject();
+				if(msg.type == Message.SIGNIN){
+					msg = DicData.SignIn(msg);
+					if(msg.b = true){
+						System.out.println("用户" + msg.username + "成功注册");
+					}
+					outputToClient.writeObject(msg);
+				}
+				else if(msg.type == Message.LOGIN){
+					msg = DicData.LogIn(msg);
+					if(msg.b == true){
+						b = true;
+						str = msg.username;
+						System.out.println("用户" + msg.username + "登入成功");
+						OlUser.add(msg.username,outputToClient);
+						outputToClient.writeObject(msg);
+						//Message newmsg = OlUser.ToMessage();
+						//outputToClient.writeObject(newmsg);
+						OlUser.BroadcastUser();
+					}
+					else{
+						System.out.println("用户" + msg.username + "登陆失败");
+						outputToClient.writeObject(msg);
+					}
+				}
+				else if(msg.type == Message.LOGOUT){
+					System.out.println("用户" + msg.username + "登出");
+					OlUser.remove(msg.username);
+					OlUser.BroadcastUser();
+					//return;
+				}
+				else if(msg.type == Message.ZAN){
+					UserInfo uif = new UserInfo();
+					uif.UserId = msg.username;
+					uif.UserKey = msg.password;
+					uif.NumOfYoudao = msg.numYoudao;
+					uif.NumOfJinshan = msg.numJinshan;
+					uif.NumOfBing = msg.numBing;
+					System.out.println("用户 "+msg.username+" 信息更新 " + " 有道 ：" +uif.NumOfYoudao + " 金山：" + uif.NumOfJinshan + " 必应：" + uif.NumOfBing);
+					DicData.update(uif);
+				}
+				else if(msg.type == Message.SHARE){
+					System.out.println("用户"+msg.password+"分享单词给用户 "+ msg.username);
+					OlUser.GetOutputStream(msg.username).writeObject(msg);
+				}
+				
+			}
+		} catch (IOException e) {
+			// TODO 自动生成的 catch 块
+			//e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO 自动生成的 catch 块
+			//e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO 自动生成的 catch 块
+			//e.printStackTrace();
+		}
+		
+		if(b){
+			System.out.println("用户" + str + "登出");
+			OlUser.remove(str);
+			OlUser.BroadcastUser();
+		}
+	}
+}
+
+
