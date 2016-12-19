@@ -38,11 +38,14 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 	private static final int height = 5, width = 30;
 	
 	private boolean hasLogin;
+	private boolean[] b = new boolean[3];
+	private int numYoudao, numJinshan, numBing;
 	
 	private JTextField jtfWord = new JTextField(40);
 	  
     private JTextArea jtaYoudao = new JTextArea(height, width), jtaJinshan = new JTextArea(height, width), jtaBing = new JTextArea(height, width);
-    private JButton jbt = new JButton("查询"), jbt1, jbt2, jbt3;
+    private JButton jbt = new JButton("查询");
+    private JButton[] jbtzan = new JButton[3], jbtshare = new JButton[3];
     
     private JCheckBox jcbYoudao = new JCheckBox("有道",true), 
     		jcbJinshan =  new JCheckBox("金山",true), 
@@ -55,16 +58,40 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
     
     private JPanel p1, p2, p3, jpYoudao, jpJinshan, jpBing, p7;
     
-    public OnlineDictionaryClient()
+    private Socket socket;
+    ObjectOutputStream toServer;
+	ObjectInputStream fromServer;
+	private String username;
+    
+	private LoginTask logintask;
+	private Thread thread;
+	private OnlineDictionaryClient odc = this;
+	
+	private JFrame UserListFrame = new JFrame("在线用户列表");
+	private JTextArea jtaUL = new JTextArea();
+	
+    public OnlineDictionaryClient() throws UnknownHostException, IOException
     {
-    	super("在线词典ver1.0");
+    	super("在线词典ver1.0-离线");
+    	socket= new Socket("172.26.121.75",8007);
+    	
+    	toServer =  new ObjectOutputStream(socket.getOutputStream());
+		fromServer = new ObjectInputStream(socket.getInputStream());
+		
     	hasLogin = false;
     	setResizable(false);
     	this.setSize(700, 600);
+    	
     	Toolkit tk = this.getToolkit();
     	Dimension dm = tk.getScreenSize(); 
-    	this.setLocation((int)(dm.getWidth()-700)/2,(int)(dm.getHeight()-700)/2);
+    	this.setLocation((int)(dm.getWidth()-700)/2 - 150,(int)(dm.getHeight()-700)/2);
 
+    	UserListFrame.setSize(300, 600);
+    	UserListFrame.setLocation((int)(dm.getWidth()-700)/2 +540,(int)(dm.getHeight()-700)/2);
+    	UserListFrame.setVisible(true);
+    	jtaUL.setEditable(false);
+    	UserListFrame.add(jtaUL);
+    	
     	//菜单栏
     	logMenu.add(jmi1);
     	logMenu.add(jmi2);
@@ -94,19 +121,22 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 		jlab2 = new JLabel(new ImageIcon("C:\\Users\\user\\workspace\\Jinshan.jpg"));
 		jlab3 = new JLabel(new ImageIcon("C:\\Users\\user\\workspace\\Bing.jpg"));
 		
-		jpYoudao = new JPanel(new FlowLayout(FlowLayout.LEFT,15,4));
-		jpJinshan = new JPanel(new FlowLayout(FlowLayout.LEFT,15,4));
-		jpBing = new JPanel(new FlowLayout(FlowLayout.LEFT,15,4));
+		jpYoudao = new JPanel(new FlowLayout(FlowLayout.LEFT,12,4));
+		jpJinshan = new JPanel(new FlowLayout(FlowLayout.LEFT,12,4));
+		jpBing = new JPanel(new FlowLayout(FlowLayout.LEFT,12,4));
 		
-		jbt1 = new JButton("\n 赞 \n");
-		jbt2 = new JButton("\n 赞 \n");
-		jbt3 = new JButton("\n 赞 \n");
+		for(int i = 0; i < 3; i++)
+		{
+			jbtzan[i] = new JButton("\n 赞 \n");
+			b[i] = false;
+			jbtshare[i] = new JButton("分享");
+		} 
 		
-		jpYoudao.add(jlab1);jpYoudao.add(jtaYoudao);jpYoudao.add(jbt1);
+		jpYoudao.add(jlab1);jpYoudao.add(jtaYoudao);jpYoudao.add(jbtzan[0]);jpYoudao.add(jbtshare[0]);
 		
-		jpJinshan.add(jlab2);jpJinshan.add(jtaJinshan);jpJinshan.add(jbt2);
+		jpJinshan.add(jlab2);jpJinshan.add(jtaJinshan);jpJinshan.add(jbtzan[1]);jpJinshan.add(jbtshare[1]);
 		
-		jpBing.add(jlab3);jpBing.add(jtaBing);jpBing.add(jbt3);
+		jpBing.add(jlab3);jpBing.add(jtaBing);jpBing.add(jbtzan[2]);jpBing.add(jbtshare[2]);
 		
 		jpYoudao.setBorder(new TitledBorder("有道"));
 		jpJinshan.setBorder(new TitledBorder("金山"));
@@ -143,11 +173,15 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 				}
 				else
 				{
+					
 					word = word.replaceAll(" ", "%20");
 					//System.out.print(word);
 					try {
 						if(jcbYoudao.isSelected())
+						{
 							jtaYoudao.setText(GetTrans.getFromYoudao(word));
+							b[0] = false;
+						}
 						else
 							jtaYoudao.setText("");
 					} catch (IOException e1) {
@@ -156,7 +190,10 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 					}
 					try {
 						if(jcbJinshan.isSelected())
+						{
 							jtaJinshan.setText(GetTrans.getFromJinshan(word));
+							b[1] = false;
+						}
 						else
 							jtaJinshan.setText("");
 					} catch (IOException e1) {
@@ -166,7 +203,10 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 					word = word.replaceAll("%20", "+");
 					try {
 						if(jcbBing.isSelected())
+						{
 							jtaBing.setText(GetTrans.getFromBing(word));
+							b[2] = false;
+						}
 						else
 							jtaBing.setText("");
 					} catch (IOException e1) {
@@ -178,36 +218,223 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 		});
     	
     	//用户注册按钮
-    	jmi1.addActionListener(new ActionListener(){
-    		public void actionPerformed(ActionEvent e)
-    		{
-    			Runnable task = new SigninTask();
-    			new Thread(task).start();
-    		}
-    	});
+    	jmi1.addActionListener(new SigninActionListener());
     	
     	//用户登陆按钮
     	jmi2.addActionListener(new ActionListener(){
-    		public void actionPerformed(ActionEvent e)
-    		{
-    			Runnable task = new LoginTask();
-    			new Thread(task).start();
-    		}
-    	});
-    	//用户登陆按钮
-    	jmi2.addActionListener(new ActionListener(){
-    		public void actionPerformed(ActionEvent e)
-    		{
-    			Runnable task = new LoginTask();
-    			new Thread(task).start();
-    		}
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				try {
+					logintask = new LoginTask(odc,socket, toServer, fromServer);
+					thread = new Thread(logintask);
+					thread.start();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+    		
     	});
     	//用户注销按钮
     	jmi3.addActionListener(new ActionListener(){
-    		public void actionPerformed(ActionEvent e)
+    		@SuppressWarnings("deprecation")
+			public void actionPerformed(ActionEvent e)
     		{
-    			
+    			setTitle("在线词典ver1.0-离线");
+    			jmi2.setEnabled(true);
+    			JOptionPane.showMessageDialog(null, "线上功能已关闭", "注销成功", JOptionPane.INFORMATION_MESSAGE);
+    			for(int i = 0; i < 3; i++)
+    				jbtzan[i].setText("\n 赞 \n");
+    			thread.stop();
+    			Message m = new Message();
+    			try {
+    				m.username = username;
+					toServer.writeObject(m);
+					toServer.flush();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+    			jmi3.setEnabled(false);
+    			jtaUL.setText("");
     		}
+    	});
+    	jmi3.setEnabled(false);
+    	//赞有道
+    	jbtzan[0].addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(jtaYoudao.getText().equals(""))
+				{
+					return;
+				}
+				if(!b[0])
+				{
+					b[0] = true;
+					numYoudao++;
+				}
+				else
+				{
+					b[0] = false;
+					numYoudao--;
+				}
+				jbtzan[0].setText("赞"+numYoudao);
+				sort();
+				Message m = new Message(true,numYoudao,numJinshan,numBing);
+				m.type = Message.ZAN;
+				m.username = username;
+				try {
+					toServer.writeObject(m);
+					toServer.flush();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+    	});
+    	//赞金山
+    	jbtzan[1].addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(jtaJinshan.getText().equals(""))
+				{
+					return;
+				}
+				if(!b[1])
+				{
+					b[1] = true;
+					numJinshan++;
+				}
+				else
+				{
+					b[1] = false;
+					numJinshan--;
+				}
+				jbtzan[1].setText("赞"+numJinshan);
+				sort();
+				Message m = new Message(true,numYoudao,numJinshan,numBing);
+				m.type = Message.ZAN;
+				m.username = username;
+				try {
+					toServer.writeObject(m);
+					toServer.flush();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+    	});
+    	jbtzan[2].addActionListener(new ActionListener(){
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(jtaBing.getText().equals(""))
+				{
+					return;
+				}
+				if(!b[2])
+				{
+					b[2] = true;
+					numBing++;
+				}
+				else
+				{
+					b[2] = false;
+					numBing--;
+				}
+				jbtzan[2].setText("赞"+numBing);
+				sort();
+				Message m = new Message(true,numYoudao,numJinshan,numBing);
+				m.type = Message.ZAN;
+				m.username = username;
+				try {
+					toServer.writeObject(m);
+					toServer.flush();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+    		
+    	});
+    	jbtshare[0].addActionListener(new ActionListener()
+    	{
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				if(jtfWord.getText().equals("")||jtaYoudao.getText().equals(""))
+					return;
+				String inputValue = JOptionPane.showInputDialog("请输入对方的用户名");
+				Message m = new Message();
+				m.type = Message.SHARE;
+				m.username = inputValue;
+				m.password = username;
+				m.ShrWord = jtfWord.getText();
+				m.ShrMeaning = jtaYoudao.getText();
+				try {
+					toServer.writeObject(m);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+    		
+    	});
+    	jbtshare[1].addActionListener(new ActionListener()
+    	{
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				if(jtfWord.getText().equals("")||jtaJinshan.getText().equals(""))
+					return;
+				String inputValue = JOptionPane.showInputDialog("请输入对方的用户名");
+				Message m = new Message();
+				m.type = Message.SHARE;
+				m.username = inputValue;
+				m.password = username;
+				m.ShrWord = jtfWord.getText();
+				m.ShrMeaning = jtaJinshan.getText();
+				try {
+					toServer.writeObject(m);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+    		
+    	});
+    	jbtshare[2].addActionListener(new ActionListener()
+    	{
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				if(jtfWord.getText().equals("")||jtaBing.getText().equals(""))
+					return;
+				String inputValue = JOptionPane.showInputDialog("请输入对方的用户名");
+				Message m = new Message();
+				m.type = Message.SHARE;
+				m.username = inputValue;
+				m.password = username;
+				m.ShrWord = jtfWord.getText();
+				m.ShrMeaning = jtaBing.getText();
+				try {
+					toServer.writeObject(m);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+    		
     	});
     	this.setVisible(true);
     }
@@ -240,6 +467,15 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 				jtaBing.setText("未查找到释义.");
 			} 
         }
+	}
+	class SigninActionListener implements ActionListener
+	{
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub
+				Runnable task = new SigninTask();
+				new Thread(task).start();
+		}
 	}
 	class SigninTask extends JFrame implements Runnable{
 		
@@ -292,14 +528,12 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 	    			username = jtf.getText();
 	    			password = jpw.getText();
 	    			
-	    			//System.out.println(username+"\n"+password);
-	    			
-	    			Message m = new Message(Message.SIGNIN, username, password);
-	    			
-	    			ObjectOutputStream toServer;
-	    			ObjectInputStream fromServer;
+	    			Message m = new Message(Message.SIGNIN, username, password);		
 	    			try {
-						Socket socket = new Socket("172.26.121.75",8006);
+	    				@SuppressWarnings("resource")
+						Socket socket= new Socket("172.26.121.75",8007);
+		    			ObjectOutputStream toServer;
+		    			ObjectInputStream fromServer;
 						toServer =  new ObjectOutputStream(socket.getOutputStream());
 						toServer.flush();
 						fromServer = new ObjectInputStream(socket.getInputStream());
@@ -309,10 +543,13 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 						if(m.b)
 						{	
 							//注册成功
+							JOptionPane.showMessageDialog(null, "赶紧开始你的单词之旅", "注册成功", JOptionPane.INFORMATION_MESSAGE);
+							dispose();
 						}
 						else
 						{
 							//注册失败
+					    	JOptionPane.showMessageDialog(null, "用户名已存在","注册失败",  JOptionPane.ERROR_MESSAGE);
 						}
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
@@ -321,7 +558,7 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-	    			dispose();
+	    			
 	    		}
 	    	});
 	    	//取消
@@ -351,10 +588,21 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 		JButton jbt2 = null;
 		JTextField jtf = null;
 		JPasswordField jpw = null;
+		OnlineDictionaryClient jf;
+		Socket loginSocket;
+		ObjectOutputStream toServer;
+		ObjectInputStream fromServer;
 		
-		public LoginTask()
+		public LoginTask(OnlineDictionaryClient jf, Socket socket, 
+				ObjectOutputStream toServer, ObjectInputStream fromServer) throws UnknownHostException, IOException
 		{
 			super("用户登陆");
+			this.jf = jf;
+			
+			loginSocket= socket;
+			this.toServer =  toServer;
+			this.fromServer = fromServer;
+			
 			this.setResizable(false);
 			jlab1 = new JLabel("账号");
 			jlab2 = new JLabel("密码");
@@ -383,33 +631,45 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 	    	
 	    	//登录
 	    	jbt1.addActionListener(new ActionListener(){
-	    		public void actionPerformed(ActionEvent e)
+	    		@SuppressWarnings("deprecation")
+				public void actionPerformed(ActionEvent e)
 	    		{
 	    			String username, password;
 	    			username = jtf.getText();
 	    			password = jpw.getText();
 	    			
-	    			//System.out.println(username+"\n"+password);
-	    			
 	    			Message m = new Message(Message.LOGIN, username, password);
 	    			
-	    			ObjectOutputStream toServer;
-	    			ObjectInputStream fromServer;
 	    			try {
-						Socket socket = new Socket("172.26.121.75",8006);
-						toServer =  new ObjectOutputStream(socket.getOutputStream());
-						toServer.flush();
-						fromServer = new ObjectInputStream(socket.getInputStream());
-						
+
 						toServer.writeObject(m);
+						toServer.flush();
 						m = (Message) fromServer.readObject();
 						if(m.b)
 						{	
 							//登陆成功
+							JOptionPane.showMessageDialog(null, "线上功能已启用", "登陆成功", JOptionPane.INFORMATION_MESSAGE);
+							hasLogin = true;
+							jf.setTitle("在线词典ver1.0-在线");
+							jf.jmi2.setEnabled(false);
+							jf.jmi3.setEnabled(true);
+						
+							jf.numYoudao = m.numYoudao;
+							jf.numJinshan = m.numJinshan;
+							jf.numBing = m.numBing;
+							jf.username = username;
+							
+							jf.jbtzan[0].setText("赞"+m.numYoudao);
+							jf.jbtzan[1].setText("赞"+m.numJinshan);
+							jf.jbtzan[2].setText("赞"+m.numBing);
+							jf.sort();
+							dispose();
+							new Thread(new ListenerTask()).start();
 						}
 						else
 						{
 							//登陆失败
+					    	JOptionPane.showMessageDialog(null, "用户名与密码无法登陆","登陆失败",  JOptionPane.ERROR_MESSAGE);
 						}
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
@@ -418,7 +678,7 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-	    			dispose();
+	    			
 	    		}
 	    	});
 	    	//取消
@@ -434,7 +694,89 @@ public class OnlineDictionaryClient extends JFrame implements ActionListener
 			// TODO Auto-generated method stub
 			this.setVisible(true);
 		}
-		
+	}
+	class ListenerTask implements Runnable
+	{
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			Message k;
+			try {
+				k = (Message) fromServer.readObject();
+				jtaUL.setText(k.userlist);
+			} catch (ClassNotFoundException | IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			while(true)
+			{
+				try {
+					k = (Message) fromServer.readObject();
+					if(k.type == Message.USERLIST){
+						jtaUL.setText(k.userlist);
+					}
+					if(k.type == Message.SHARE)
+					{
+						JOptionPane.showMessageDialog(null, k.ShrMeaning,k.ShrWord, 
+								JOptionPane.INFORMATION_MESSAGE); 
+					}
+				} catch (ClassNotFoundException | IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	public void sort()
+	{
+		p7.remove(jpYoudao);
+		p7.remove(jpJinshan);
+		p7.remove(jpBing);
+		//youdao > jinshan
+		if(numYoudao > numJinshan)
+		{
+			if(numJinshan > numBing)
+			{
+				p7.add(jpYoudao);
+				p7.add(jpJinshan);
+				p7.add(jpBing);
+			}
+			else if(numYoudao > numBing)
+			{
+				p7.add(jpYoudao);
+				p7.add(jpBing);
+				p7.add(jpJinshan);
+			}
+			else
+			{
+				p7.add(jpBing);
+				p7.add(jpYoudao);
+				p7.add(jpJinshan);
+			}
+		}
+		//jinshan > youdao
+		else
+		{
+			if(numBing > numJinshan)
+			{
+				p7.add(jpBing);
+				p7.add(jpJinshan);
+				p7.add(jpYoudao);
+			}
+			else if(numBing > numYoudao)
+			{
+				p7.add(jpJinshan);
+				p7.add(jpBing);
+				p7.add(jpYoudao);
+			}
+			else
+			{
+				p7.add(jpJinshan);
+				p7.add(jpYoudao);
+				p7.add(jpBing);
+			}
+		}
 	}
 }
 
